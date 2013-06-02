@@ -1,5 +1,21 @@
 module TellaPeer
   class Pong < Message
+    attr_accessor :ip, :port
+
+    def initialize(header = nil, body = '')
+      super(header, body)
+
+      self.port, self.ip = body.unpack(payload_packer)
+    end
+
+    def payload
+      [port] + ip
+    end
+
+    def payload_packer
+      'nCCCC'
+    end
+
     def type
       MessageTypes::PONG
     end

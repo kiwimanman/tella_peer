@@ -35,13 +35,21 @@ module TellaPeer
       @payload_length || 0
     end
 
+    def payload
+      []
+    end
+
+    def payload_packer
+      ''
+    end
+
     def pack
       id = message_id.chars.map { |i| i.ord }
-      (id << type << ttl << hops << payload_length).pack('c' * 19 + 'N')
+      ((id << type << ttl << hops << payload_length) + payload).pack('C' * 19 + 'N' + payload_packer)
     end
 
     def self.unpack(socket, ip, port)
-      header = socket.read(23).unpack('c' * 19 + 'N')
+      header = socket.read(23).unpack('C' * 19 + 'N')
       body   = socket.read(header.last)
 
       message = case header[16]

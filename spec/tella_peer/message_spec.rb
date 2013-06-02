@@ -1,5 +1,12 @@
 describe TellaPeer::Message do
   let(:message) { TellaPeer::Message.new }
+
+  context '#type' do
+    it 'starts off as unknown' do
+      expect(message.type).to be TellaPeer::MessageTypes::UNKNOWN
+    end
+  end
+
   [:message_id, :type, :ttl, :hops, :payload_length, :pack, :recv_ip, :recv_port].each do |method_name|
     it { expect(message).to respond_to method_name }
   end
@@ -13,12 +20,6 @@ describe TellaPeer::Message do
     context 'when compared to other messages' do
       let(:other_message) { TellaPeer::Message.new }
       it { expect(message.message_id).to_not eq other_message.message_id }
-    end
-  end
-
-  context '#type' do
-    it 'starts off as unknown' do
-      expect(message.type).to be TellaPeer::MessageTypes::UNKNOWN
     end
   end
 
@@ -51,7 +52,7 @@ describe TellaPeer::Message do
       let(:original_message) { TellaPeer::Message.new }
       let(:read_message) do
         full_message = original_message.pack
-        TellaPeer::Message.new(full_message[0,23].unpack('c' * 19 + 'N'), full_message[24,-1])
+        TellaPeer::Message.new(full_message[0,23].unpack('C' * 19 + 'N'), full_message[24..-1])
       end
       [:message_id, :ttl, :hops, :payload_length].each do |prop|
         it "maintains #{prop}" do
