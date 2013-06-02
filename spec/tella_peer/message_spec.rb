@@ -52,7 +52,7 @@ describe TellaPeer::Message do
       let(:original_message) { TellaPeer::Message.new }
       let(:read_message) do
         full_message = original_message.pack
-        TellaPeer::Message.new(full_message[0,23].unpack('C' * 19 + 'N'), full_message[24..-1])
+        TellaPeer::Message.new(full_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), full_message[24..-1])
       end
       [:message_id, :ttl, :hops, :payload_length].each do |prop|
         it "maintains #{prop}" do

@@ -11,11 +11,13 @@ describe TellaPeer::Pong do
   it { expect(message).to respond_to :port }
   it { expect(message).to respond_to :ip   }
 
+  it { expect(message.payload_length).to eq 5 }
+
   context '#new' do
     context 'building a base message (do not actually send one of these)' do
       let(:read_message) do
         full_message = message.pack
-        TellaPeer::Pong.new(full_message[0,23].unpack('c' * 19 + 'N'), full_message[24..-1])
+        TellaPeer::Pong.new(full_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), full_message[24..-1])
       end
       [:message_id, :ttl, :hops, :payload_length].each do |prop|
         it "maintains #{prop}" do

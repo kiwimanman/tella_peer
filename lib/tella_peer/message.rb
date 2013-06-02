@@ -3,6 +3,8 @@ require 'uuid'
 module TellaPeer
   class Message
 
+    HEADER_PACKER = 'C' * 19 + 'N'
+
     attr_writer :message_id, :ttl, :hops, :payload_length
     attr_accessor :recv_ip, :recv_port
 
@@ -32,7 +34,7 @@ module TellaPeer
     end
 
     def payload_length
-      @payload_length || 0
+      @payload_length ||= 0
     end
 
     def payload
@@ -45,7 +47,7 @@ module TellaPeer
 
     def pack
       id = message_id.chars.map { |i| i.ord }
-      ((id << type << ttl << hops << payload_length) + payload).pack('C' * 19 + 'N' + payload_packer)
+      ((id << type << ttl << hops << payload_length) + payload).pack(HEADER_PACKER + payload_packer)
     end
 
     def self.unpack(socket, ip, port)

@@ -6,6 +6,7 @@ module TellaPeer
       super(header, body)
 
       self.port, self.ip = body.unpack(payload_packer)
+      self.payload_length = 5
     end
 
     def payload
