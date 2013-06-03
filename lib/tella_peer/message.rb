@@ -3,7 +3,7 @@ require 'uuid'
 module TellaPeer
   class Message
     class << self
-      attr_writer :port, :ip, :ttl
+      attr_writer :port, :ip, :ttl, :text
       def ip
         @ip ||= [127, 0, 0, 1]
       end
@@ -12,6 +12,9 @@ module TellaPeer
       end
       def ttl
         @ttl ||= 1
+      end
+      def text
+        @text ||= UUID.new.generate
       end
     end
 
@@ -64,6 +67,7 @@ module TellaPeer
     def increment!
       self.ttl  += -1
       self.hops +=  1
+      self
     end
 
     def pack
@@ -72,7 +76,9 @@ module TellaPeer
     end
 
     def self.unpack(socket, ip, port)
-      header = socket.read(23).unpack('C' * 19 + 'N')
+      header = socket.read(23)
+      return if header.nil?
+      header = header.unpack(HEADER_PACKER)
       body   = socket.read(header.last)
 
       message = case header[16]

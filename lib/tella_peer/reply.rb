@@ -32,7 +32,7 @@ module TellaPeer
     end
 
     def text
-      @text ||= ''
+      @text ? @text : self.text = TellaPeer::Message.text
     end
 
     def type
