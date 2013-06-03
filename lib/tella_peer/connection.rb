@@ -42,6 +42,7 @@ module TellaPeer
             logger.info "Connection to #{key} closed due to max connections"
           end
         end
+        connections[key]
       end
 
       def ping
@@ -124,7 +125,7 @@ module TellaPeer
 
     def read_pong(message)
       logger.debug "Read Pong #{message.message_id}"
-      add_potential_connection(message.pretty_ip, message.port)
+      Connection.add_potential_connection(message.pretty_ip, message.port)
       if ping_log.keys.include? message.message_id
         send_message(message, to: ping_log[message.message_id])
       else

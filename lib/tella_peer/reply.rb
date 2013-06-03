@@ -27,7 +27,7 @@ module TellaPeer
 
     def log
       @logger ||= Logger.new(STDOUT)
-      logger.unknown "#{pretty_ip}:#{port} #{text}"
+      @logger.unknown "#{pretty_ip}:#{port} #{text}"
     end
 
     def payload

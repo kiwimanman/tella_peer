@@ -79,7 +79,6 @@ module TellaPeer
       header = socket.read(23)
       return if header.nil?
       header = header.unpack(HEADER_PACKER)
-      debugger if header.last > 0
       body   = socket.read(header.last)
 
       message = case header[16]
