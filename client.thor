@@ -16,20 +16,13 @@ class Client < Thor
     begin
       seed_ip, seed_port = seed.split(':')
       Timeout::timeout(15) { TellaPeer::Connection.connect_as_client(seed_ip, seed_port) }.watch
+      TellaPeer.logger.info "Connected to seed"
     rescue
       puts $!
     end
 
-    Thread.new {
-      begin
-        loop do
-          puts 'Send Ping';  TellaPeer::Connection.ping;  sleep 5
-          puts 'Send Query'; TellaPeer::Connection.query; sleep 5
-        end
-      rescue
-        puts $!.backtrace
-      end
-    }
+    TellaPeer.start_outbound_sceduler
+    TellaPeer.start_connection_builder
 
     Socket.tcp_server_loop(TellaPeer::Message.port) {|sock, client_addrinfo|
       TellaPeer::Connection.build(

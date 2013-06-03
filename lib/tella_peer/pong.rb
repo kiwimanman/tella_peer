@@ -13,6 +13,10 @@ module TellaPeer
       @ip ||= Message.ip
     end
 
+    def pretty_ip
+      ip.join('.')
+    end
+
     def port
       @port ||= Message.port
     end

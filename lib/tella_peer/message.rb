@@ -11,7 +11,7 @@ module TellaPeer
         @port ||= 9000
       end
       def ttl
-        @ttl ||= 1
+        @ttl ||= 5
       end
       def text
         @text ||= UUID.new.generate

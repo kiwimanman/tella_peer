@@ -10,7 +10,7 @@ describe TellaPeer::Message do
   context 'class defaults' do
     it { expect(TellaPeer::Message.ip  ).to eq [127, 0, 0, 1] }
     it { expect(TellaPeer::Message.port).to eq 9000           }
-    it { expect(TellaPeer::Message.ttl ).to eq 1              }
+    it { expect(TellaPeer::Message.ttl ).to eq 5              }
   end
 
   [:message_id, :type, :ttl, :hops, :payload_length, :pack, :recv_ip, :recv_port, :increment!].each do |method_name|
@@ -39,8 +39,8 @@ describe TellaPeer::Message do
   end
 
   context '#ttl' do
-    it 'starts off at 1' do
-      expect(message.ttl).to be 1
+    it "starts off at #{TellaPeer::Message.ttl}" do
+      expect(message.ttl).to be TellaPeer::Message.ttl
     end
   end
 

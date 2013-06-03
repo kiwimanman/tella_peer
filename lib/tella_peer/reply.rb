@@ -1,6 +1,6 @@
 module TellaPeer
   class Reply < Message
-    attr_writer :ip, :port
+    attr_writer :ip, :port, :logger
 
     def initialize(header = nil, body = '')
       super(header, body)
@@ -13,8 +13,17 @@ module TellaPeer
       @ip ||= Message.ip
     end
 
+    def pretty_ip
+      ip.join('.')
+    end
+
     def port
       @port ||= Message.port
+    end
+
+    def log
+      @logger ||= Logger.new(STDOUT)
+      logger.unknown "#{pretty_ip}:#{port} #{text}"
     end
 
     def payload
