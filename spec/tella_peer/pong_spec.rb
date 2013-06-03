@@ -11,7 +11,7 @@ describe TellaPeer::Pong do
   it { expect(message).to respond_to :port }
   it { expect(message).to respond_to :ip   }
 
-  it { expect(message.payload_length).to eq 5 }
+  it { expect(message.payload_length).to eq 6 }
 
   context '#new' do
     context 'building a base message (do not actually send one of these)' do

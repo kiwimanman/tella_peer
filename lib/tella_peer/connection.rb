@@ -84,7 +84,7 @@ module TellaPeer
             read_message(message)
           end
         rescue
-          logger.warn $! + $!.backtrace
+          logger.warn $!
         ensure
           close_socket
           logger.info "Closed connection to #{key}"

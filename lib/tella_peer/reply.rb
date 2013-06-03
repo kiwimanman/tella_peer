@@ -5,7 +5,12 @@ module TellaPeer
     def initialize(header = nil, body = '')
       super(header, body)
 
-      self.port, self.ip = body.unpack(payload_packer)
+      unless body.empty?
+        content   = body.unpack(payload_packer)
+        self.port = content.first
+        self.ip   = content[1..5]
+        self.text = content[4..-1].map(&:chr).join
+      end
       self.payload_length = body.length
     end
 
@@ -31,12 +36,12 @@ module TellaPeer
     end
 
     def payload_packer
-      'nCCCC' + 'C' * text.length
+      'nCCCC' + 'C' * (payload_length - 6)
     end
 
     def text=(value)
       @text = value
-      @payload_length = 5 + value.length
+      @payload_length = 6 + value.length
       value
     end
 

@@ -5,8 +5,12 @@ module TellaPeer
     def initialize(header = nil, body = '')
       super(header, body)
 
-      self.port, self.ip = body.unpack(payload_packer)
-      self.payload_length = 5
+      unless body.empty?
+        content   = body.unpack(payload_packer)
+        self.port = content.first
+        self.ip   = content[1..-1]
+      end
+      self.payload_length = 6
     end
 
     def ip
@@ -14,7 +18,7 @@ module TellaPeer
     end
 
     def pretty_ip
-      ip.join('.')
+      ip.map(&:to_s).join('.')
     end
 
     def port
