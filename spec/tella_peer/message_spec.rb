@@ -64,14 +64,16 @@ describe TellaPeer::Message do
 
   context '#new' do
     context 'building a base message (do not actually send one of these)' do
-      let(:original_message) { TellaPeer::Message.new }
+      let(:packed_message)   { message.pack }
       let(:read_message) do
-        full_message = original_message.pack
-        TellaPeer::Message.new(full_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), full_message[24..-1])
+        TellaPeer::Message.new(packed_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), packed_message[23..-1])
+      end
+      it 'has a payload the same length as the payload field' do
+        expect((packed_message[23..-1] || []).length).to eq message.payload_length
       end
       [:message_id, :ttl, :hops, :payload_length].each do |prop|
         it "maintains #{prop}" do
-          expect(read_message.send(prop)).to eq original_message.send(prop)
+          expect(read_message.send(prop)).to eq message.send(prop)
         end
       end
     end

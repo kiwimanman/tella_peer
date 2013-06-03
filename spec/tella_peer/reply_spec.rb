@@ -19,12 +19,14 @@ describe TellaPeer::Reply do
 
   context '#new' do
     context 'building a reply' do
+      let(:packed_message) { message.pack }
       let(:read_message) do
-        full_message = message.pack
-        debugger
-        TellaPeer::Reply.new(full_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), full_message[24..-1])
+        TellaPeer::Reply.new(packed_message[0..22].unpack(TellaPeer::Message::HEADER_PACKER), packed_message[23..-1])
       end
-      [:message_id, :ttl, :hops, :payload_length, :text].each do |prop|
+      it 'has a payload the same length as the payload field' do
+        expect((packed_message[23..-1] || []).length).to eq message.payload_length
+      end
+      [:message_id, :ttl, :hops, :payload_length, :text, :ip, :port].each do |prop|
         it "maintains #{prop}" do
           expect(read_message.send(prop)).to eq message.send(prop)
         end

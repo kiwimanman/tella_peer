@@ -14,12 +14,15 @@ describe TellaPeer::Pong do
   it { expect(message.payload_length).to eq 6 }
 
   context '#new' do
-    context 'building a base message (do not actually send one of these)' do
+    context 'building a pong message' do
+      let(:packed_message) { message.pack }
       let(:read_message) do
-        full_message = message.pack
-        TellaPeer::Pong.new(full_message[0,23].unpack(TellaPeer::Message::HEADER_PACKER), full_message[24..-1])
+        TellaPeer::Pong.new(packed_message[0..22].unpack(TellaPeer::Message::HEADER_PACKER), packed_message[23..-1])
       end
-      [:message_id, :ttl, :hops, :payload_length].each do |prop|
+      it 'payload size is 6 bytes' do
+        expect(packed_message[23..-1].length).to eq 6
+      end
+      [:message_id, :ttl, :hops, :payload_length, :ip, :port].each do |prop|
         it "maintains #{prop}" do
           expect(read_message.send(prop)).to eq message.send(prop)
         end

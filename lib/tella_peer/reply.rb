@@ -6,12 +6,11 @@ module TellaPeer
       super(header, body)
 
       unless body.empty?
-        content   = body.unpack(payload_packer)
-        self.port = content.first
-        self.ip   = content[1..5]
-        self.text = content[4..-1].map(&:chr).join
+        content   = body.unpack(payload_unpacker)
+        self.port = content[0]
+        self.ip   = content[1..4]
+        self.text = content[5..-1].map(&:chr).join
       end
-      self.payload_length = body.length
     end
 
     def ip
@@ -35,8 +34,12 @@ module TellaPeer
       [port] + ip + text.chars.map(&:ord)
     end
 
+    def payload_unpacker
+      'n' + 'CCCC' + 'C' * (payload_length - 6)
+    end
+
     def payload_packer
-      'nCCCC' + 'C' * (payload_length - 6)
+      'n' + 'CCCC' + text.gsub(/./, 'C')
     end
 
     def text=(value)
