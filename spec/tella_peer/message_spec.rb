@@ -7,7 +7,13 @@ describe TellaPeer::Message do
     end
   end
 
-  [:message_id, :type, :ttl, :hops, :payload_length, :pack, :recv_ip, :recv_port].each do |method_name|
+  context 'class defaults' do
+    it { expect(TellaPeer::Message.ip  ).to eq [127, 0, 0, 1] }
+    it { expect(TellaPeer::Message.port).to eq 9000           }
+    it { expect(TellaPeer::Message.ttl ).to eq 1              }
+  end
+
+  [:message_id, :type, :ttl, :hops, :payload_length, :pack, :recv_ip, :recv_port, :increment!].each do |method_name|
     it { expect(message).to respond_to method_name }
   end
 
@@ -20,6 +26,15 @@ describe TellaPeer::Message do
     context 'when compared to other messages' do
       let(:other_message) { TellaPeer::Message.new }
       it { expect(message.message_id).to_not eq other_message.message_id }
+    end
+  end
+
+  context '#increment!' do
+    it 'decrements ttl' do
+      expect{message.increment!}.to change{message.ttl}.by(-1)
+    end
+    it 'increments hops' do
+      expect{message.increment!}.to change{message.hops}.by(1)
     end
   end
 

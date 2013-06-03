@@ -2,6 +2,18 @@ require 'uuid'
 
 module TellaPeer
   class Message
+    class << self
+      attr_writer :port, :ip, :ttl
+      def ip
+        @ip ||= [127, 0, 0, 1]
+      end
+      def port
+        @port ||= 9000
+      end
+      def ttl
+        @ttl ||= 1
+      end
+    end
 
     HEADER_PACKER = 'C' * 19 + 'N'
 
@@ -26,11 +38,15 @@ module TellaPeer
     end
 
     def ttl
-      @ttl || 1
+      @ttl ||= Message.ttl
     end
 
     def hops
-      @hops || 0
+      @hops ||= 0
+    end
+
+    def transmitable?
+      ttl > 0
     end
 
     def payload_length
@@ -43,6 +59,11 @@ module TellaPeer
 
     def payload_packer
       ''
+    end
+
+    def increment!
+      self.ttl  += -1
+      self.hops +=  1
     end
 
     def pack
