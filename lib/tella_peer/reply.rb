@@ -48,6 +48,10 @@ module TellaPeer
       value
     end
 
+    def connection_key
+      "#{pretty_ip}:#{port}"
+    end
+
     def text
       @text ? @text : self.text = TellaPeer::Message.text
     end

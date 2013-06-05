@@ -7,6 +7,7 @@ require 'tella_peer/ping'
 require 'tella_peer/pong'
 require 'tella_peer/query'
 require 'tella_peer/reply'
+require 'tella_peer/connections'
 require 'tella_peer/connection'
 
 require 'json'
@@ -16,7 +17,12 @@ require 'logger'
 
 module TellaPeer
   def self.logger
-    @logger ||= Logger.new(STDOUT)
+    if @logger 
+      @logger
+    else
+      @logger = Logger.new(STDOUT)
+      @logger
+    end
   end
 
   def self.start_outbound_sceduler
@@ -24,16 +30,15 @@ module TellaPeer
       begin
         loop do
           logger.debug 'Send Ping'
-          Connection.ping
+          Connections.ping
           sleep 5
           logger.debug 'Send Query'
-          Connection.query
+          Connections.query
           sleep 5
         end
       rescue
         logger.error "Outbound sceduler crashed"
         logger.error $!
-        logger.error $!.backtrace
       ensure
         logger.warn "Outbound sceduler finished"
       end
@@ -45,13 +50,12 @@ module TellaPeer
       begin
         loop do
           logger.debug 'Building client connections'
-          Connection.build_from_connections
+          Connections.build_from_connections
           sleep 5
         end
       rescue
         logger.error "Connection builder crashed"
         logger.error $!
-        logger.error $!.backtrace
       ensure
         logger.warn "Connection builder finished"
       end

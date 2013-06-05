@@ -14,3 +14,6 @@ gem 'guard-rspec'
 gem 'terminal-notifier-guard'
 
 gem 'rspec'
+
+gem 'sinatra'
+gem 'thin'

@@ -9,23 +9,18 @@ class Client < Thor
   method_option :ttl,   :aliases => "-t",                    :desc => "Default ttl on new messages"
   method_option :local, :aliases => "-l", :type => :boolean, :desc => "Run the server on localhost"
   method_option :reply, :aliases => "-r",                    :desc => "String to serve in replys"
+  method_option :status_page,             :type => :boolean, :desc => "Run the status page on 4567"
 
   def start(seed = "128.208.2.88:5002")
-    process_options
+    process_options(seed)
 
-    begin
-      seed_ip, seed_port = seed.split(':')
-      Timeout::timeout(15) { TellaPeer::Connection.connect_as_client(seed_ip, seed_port) }.watch
-      TellaPeer.logger.info "Connected to seed"
-    rescue
-      puts $!
-    end
+    require 'tella_peer/status_page'
 
     TellaPeer.start_outbound_sceduler
     TellaPeer.start_connection_builder
 
     Socket.tcp_server_loop(TellaPeer::Message.port) {|sock, client_addrinfo|
-      TellaPeer::Connection.build(
+      TellaPeer::Connections.build(
         sock,
         client_addrinfo.ip_address,
         client_addrinfo.ip_port)
@@ -34,11 +29,19 @@ class Client < Thor
   end
 
   no_commands do
-    def process_options
+    def process_options(seed)
       TellaPeer::Message.port  = options[:port].to_i if options[:port]
       TellaPeer::Message.ttl   = options[:ttl].to_i  if options[:ttl]
       TellaPeer::Message.ip    = open( 'http://jsonip.com/ ' ){ |s| JSON::parse( s.string())['ip'] }.split('.') unless options[:local]
       TellaPeer::Message.text  = options[:reply] || options[:port]
+
+      seed_ip, seed_port = seed.split(':')
+      TellaPeer::Connections.seed = [seed_ip, seed_port]
+
+      TellaPeer.logger.info { "Starting on #{TellaPeer::Message.ip.join('.')}:#{TellaPeer::Message.port}" }
+      TellaPeer.logger.info { "Serving: #{TellaPeer::Message.text}" }
+      TellaPeer.logger.info { "With ttl: #{TellaPeer::Message.ttl}" }
+      TellaPeer.logger.info { "Using seed: #{seed}" }
     end
   end
 end

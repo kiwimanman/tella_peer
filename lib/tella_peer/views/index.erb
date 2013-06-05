@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <p>Connections</p>
+    <ul>
+      <% TellaPeer::Connections.connections.each do |connection| %>
+        <li><%= connection.inspect %></li>
+      <% end %>
+    </ul>
+  </body>
+</html>
