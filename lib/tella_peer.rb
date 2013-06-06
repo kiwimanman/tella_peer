@@ -28,6 +28,7 @@ module TellaPeer
   def self.start_outbound_sceduler
     Thread.new {
       begin
+        count = 0
         loop do
           logger.debug 'Send Ping'
           Connections.ping
@@ -35,6 +36,8 @@ module TellaPeer
           logger.debug 'Send Query'
           Connections.query
           sleep 5
+          Connections.clear_logs if count % 100 == 0
+          count += 1
         end
       rescue
         logger.error "Outbound sceduler crashed"

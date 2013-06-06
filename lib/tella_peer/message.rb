@@ -16,6 +16,9 @@ module TellaPeer
       def text
         @text ||= UUID.new.generate
       end
+      def key
+        "#{ip.join('.')}:#{port}"
+      end
     end
 
     HEADER_PACKER = 'C' * 19 + 'N'

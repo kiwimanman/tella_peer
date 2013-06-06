@@ -1,8 +1,16 @@
 module TellaPeer
   class Connections
     class << self
-      attr_writer :ping_log, :query_log, :reply_log, :connections, :max_connections
+      attr_writer :ping_log, :query_log, :reply_log, :connections, :overriden_replies, :max_connections
       attr_accessor :seed
+
+      def uptime
+        start_time - Time.now
+      end
+
+      def start_time
+        @start_time ||= Time.now
+      end
 
       def max_connections
         @max_connections ||= 10
@@ -16,35 +24,48 @@ module TellaPeer
         @query_log   ||= {}
       end
 
+      def clear_logs
+        @ping_log = {}
+        @query_log = {}
+      end
+
       def connections
         @connections ||= {}
       end
 
       def connection_queue
-        @connection_queue ||= []
+        @connection_queue ||= {}
+      end
+
+      def web_connection_queue
+        connection_queue.dup
       end
 
       def reply_log
         @reply_log ||= {}
       end
 
+      def overriden_replies
+        @overriden_replies ||= []
+      end
+
       def close_connection(key)
         connections.delete(key)
       end
 
+      def mutex
+        @mutex ||= Mutex.new
+      end
+
       def build_from_connections
-        connection_queue << seed if connection_queue.empty? && connections.empty?
-        [connection_queue.size, max_connections - connections.size].min.times do
+        (max_connections - connections.size).times do
           begin
-            candidate = nil
-            loop do
-              break if connection_queue.empty?
-              candidate = connection_queue.shift
-              break if !connections.keys.include? candidate.join(':')
-              candidate = nil
+            candidate = connection_queue.keys.sample
+            if candidate && !connections.keys.include?(candidate) && candidate != "#{Message.ip.join('.')}:Message.port"
+              connection_queue[candidate] = connection_queue.fetch(candidate, 0) + 1
+              logger.debug "Connecting to #{candidate}"
+              Timeout::timeout(15) { connect_as_client(*candidate.split(':')).watch } 
             end
-            logger.debug "Connecting to #{candidate}"
-            Timeout::timeout(15) { connect_as_client(*candidate).watch } if candidate
           rescue
             logger.debug "Unable to connect to #{candidate}"
             logger.debug $!
@@ -59,7 +80,7 @@ module TellaPeer
         else
           logger.info "Connecting opened to #{key}"
           unless connections.size > max_connections
-            connections[key] ||= Connection.new(socket, remote_ip, remote_port)
+            connections[key] ||= Connection.new(socket, remote_ip, remote_port, direction)
           else
             socket.close
             logger.info "Connection to #{key} closed due to max connections"
@@ -102,18 +123,40 @@ module TellaPeer
 
       def store_reply(message)
         key = message.connection_key
+        return if key == Message.key
         connection = connections[key]
         connection.text = message.text if connection
         
         unless reply_log[key] && reply_log[key] == message.text
+          overriden_replies << [Time.now, key, reply_log[key]] if reply_log[key]
           logger.info "#{key} replied with #{message.text}"
+          message.log
         end
 
         reply_log[key] = message.text
       end
 
+      def seed_connections
+        add_potential_connection(*seed)
+        self
+      end
+
+      def message_counts
+        @message_counts ||= {in: {}, out: {}}
+        mutex.synchronize do
+          @message_counts.dup
+        end
+      end
+
+      def count_message(type, direction)
+        @message_counts ||= {in: {}, out: {}}
+        mutex.synchronize do
+          @message_counts[direction][type] = @message_counts[direction].fetch(type, 0) + 1
+        end
+      end
+
       def add_potential_connection(ip, port)
-        connection_queue << [ip, port]
+        connection_queue[[ip, port].join(':')] ||= 0
       end
 
       def logger

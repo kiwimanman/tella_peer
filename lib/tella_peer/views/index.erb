@@ -1,10 +1,160 @@
+<!DOCTYPE html>
 <html>
-  <body>
-    <p>Connections</p>
-    <ul>
-      <% TellaPeer::Connections.connections.each do |connection| %>
-        <li><%= connection.inspect %></li>
-      <% end %>
-    </ul>
+  <head>
+    <title>CSETella Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body data-spy="scroll" data-target=".navbar">
+    <div class="container">
+      <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+          <a class="brand" href="#">CSETella</a>
+          <ul class="nav">
+            <li><a href="#connections">Connections</a></li>
+            <li><a href="#connection_queue">Queue</a></li>
+            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#counts">Counts</a></li>
+            <li><a href="#replies">Replies</a></li>
+          </ul>
+        </div>
+      </div>
+      <h2 id="connections">Connections</h2>
+      <table class="table table-striped">
+        <thead><tr><td>Peer</td><td></td><td>Text</td><td>Time</td><td></td><td>Last Sent</td><td></td><td>Last Read</td></tr></thead>
+        <% TellaPeer::Connections.connections.each do |key, connection| %>
+          <tr>
+            <td><%= connection.remote_ip %>:<%= connection.remote_port %></br><i class="icon-home"></i><i class="icon-arrow-<%= connection.direction == :inbound ? 'left' : 'right' %>"></i></td>
+            <td></td>
+            <td><%= connection.text %></td>
+            <td><%= connection.time_elapsed.to_i %>s</td>
+            <td>
+              <% if connection.last_sent %>
+              <div>
+                <td><%= connection.last_sent.class.to_s.split('::').last %></br><i class="icon-home"></i><i class="icon-arrow-right"></i> </td>
+                <td><% 
+                message = connection.last_sent
+                m = {
+                  id: message.message_id.chars.map(&:ord).pack('CCCCCCCCCCCCCCCC'),
+                  ttl: message.ttl,
+                  hops: message.hops,
+                } 
+                m[:from] = message.key if message.respond_to? :key
+                m[:text] = message.text if message.respond_to? :text
+                m[:length] = message.payload_length if message.payload_length != 0
+                %><% m.each do |k,v| %><%= k %>:&nbsp;<%= v %></br><% end %></td>
+              </div>
+              <% else %>
+              <td></td><td></td>
+              <% end %>
+              <% if connection.last_read %>
+              <td><%= connection.last_read.class.to_s.split('::').last %></br><i class="icon-home"></i><i class="icon-arrow-left"></i></td>
+              <td><% 
+                message = connection.last_read
+                m = {
+                  id: message.message_id.chars.map(&:ord).pack('CCCCCCCCCCCCCCCC'),
+                  ttl: message.ttl,
+                  hops: message.hops,
+                } 
+                m[:from] = message.key if message.respond_to? :key
+                m[:text] = message.text if message.respond_to? :text
+                m[:length] = message.payload_length if message.payload_length != 0
+                %><% m.each do |k,v| %><%= k %>:&nbsp;<%= v %></br><% end %></td>
+                <% else %>
+              <td></td><td></td>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+      <div class="row">
+        <div class="span6">
+          <h2 id="queue">Possible Connection Set</h2>
+          <table class="table table-striped">
+            <thead><tr><td>Peer</td><td>Samples</td></thead>
+            <% TellaPeer::Connections.web_connection_queue.each do |connection, samples| %>
+              <tr>
+                <td><%= connection %></td>
+                <td><%= samples %></td>
+              </tr>
+            <% end %>
+          </table>
+        </div>
+        <div class="span6">
+          <h2 id="configuration">Configuration</h2>
+          <table class="table table-striped">
+            <thead><tr><td>Key</td><td>Value</td></thead>
+            <tr>
+              <td>Uptime</td><td><%= -TellaPeer::Connections.uptime.to_i %> seconds</td>
+            </tr>
+            <tr>
+              <td>Max Connections</td><td><%= TellaPeer::Connections.max_connections %></td>
+            </tr>
+            <tr>
+              <td>Public IP</td><td><%= TellaPeer::Message.ip.join('.') %></td>
+            </tr>
+            <tr>
+              <td>Port</td><td><%= TellaPeer::Message.port %></td>
+            </tr>
+            <tr>
+              <td>TTL</td><td><%= TellaPeer::Message.ttl %></td>
+            </tr>
+            <tr>
+              <td>Text</td><td><%= TellaPeer::Message.text %></td>
+            </tr>
+            <tr>
+              <td>Seed</td><td><%= TellaPeer::Connections.seed.join(':') %></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <h2 id="counts">Counts</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr><td></td><td>Ping</td><td>Pong</td><td>Query</td><td>Reply</td>
+        </thead>
+        <tr>
+          <td><i class="icon-home"></i><i class="icon-arrow-left"></i></td>
+          <% c = TellaPeer::Connections.message_counts %>
+          <% ci = c[:in] %>
+          <td><%= ci[0] || 0 %></td>
+          <td><%= ci[1] || 0 %></td>
+          <td><%= ci[2] || 0 %></td>
+          <td><%= ci[3] || 0 %></td>
+        </tr>
+        <tr>
+          <td><i class="icon-home"></i><i class="icon-arrow-right"></i></td>
+          <% ci = c[:out] %>
+          <td><%= ci[0] || 0 %></td>
+          <td><%= ci[1] || 0 %></td>
+          <td><%= ci[2] || 0 %></td>
+          <td><%= ci[3] || 0 %></td>
+        </tr>
+      </table>
+
+      <h2 id="replies">Replies</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr><td>Peer</td><td>Message</td><td>Overriden At</td>
+        </thead>
+        <% TellaPeer::Connections.reply_log.each do |reply| %>
+          <tr>
+            <td><%= reply[0] %></td>
+            <td><%= reply[1] %></td>
+            <td> </td>
+          </tr>
+        <% end %>
+        <% TellaPeer::Connections.overriden_replies.each do |reply| %>
+          <tr>
+            <td><%= reply[1] %></td>
+            <td><%= reply[2] %></td>
+            <td><%= reply[0] %></td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
   </body>
 </html>

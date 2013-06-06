@@ -6,7 +6,7 @@ module TellaPeer
   class StatusPage < Sinatra::Base
 
     set :static, true                             # set up static file routing
-    set :public_dir, File.expand_path('..', __FILE__) # set up the static dir (with images/js/css inside)
+    set :public_dir, File.expand_path('../public', __FILE__) # set up the static dir (with images/js/css inside)
     
     set :views,  File.expand_path('../views', __FILE__) # set up the views dir
     
