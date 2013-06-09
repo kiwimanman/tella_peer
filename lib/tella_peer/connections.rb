@@ -61,7 +61,7 @@ module TellaPeer
         (max_connections - connections.size).times do
           begin
             candidate = connection_queue.keys.sample
-            if candidate && !connections.keys.include?(candidate) && candidate != "#{Message.ip.join('.')}:Message.port"
+            if candidate && !connections.keys.include?(candidate) && candidate != Message.key
               connection_queue[candidate] = connection_queue.fetch(candidate, 0) + 1
               logger.debug "Connecting to #{candidate}"
               Timeout::timeout(15) { connect_as_client(*candidate.split(':')).watch } 

@@ -36,7 +36,10 @@ module TellaPeer
           logger.debug 'Send Query'
           Connections.query
           sleep 5
-          Connections.clear_logs if count % 100 == 0
+          if count % 100 == 0
+            Connections.clear_logs
+            Message.find_public_ip
+          end
           count += 1
         end
       rescue

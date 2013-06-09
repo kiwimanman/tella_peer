@@ -9,6 +9,8 @@ module TellaPeer
     set :public_dir, File.expand_path('../public', __FILE__) # set up the static dir (with images/js/css inside)
     
     set :views,  File.expand_path('../views', __FILE__) # set up the views dir
+
+    set :bind, '0.0.0.0'
     
     # Your "actions" go here…
     #

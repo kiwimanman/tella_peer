@@ -9,6 +9,7 @@ class Client < Thor
   method_option :ttl,   :aliases => "-t",                    :desc => "Default ttl on new messages"
   method_option :local, :aliases => "-l", :type => :boolean, :desc => "Run the server on localhost"
   method_option :reply, :aliases => "-r",                    :desc => "String to serve in replys"
+  method_option :public_ip,                                  :desc => "Public IP to communicate over the protocol (Stops auto-find of this value)"
   method_option :log_level,                                  :desc => "Log Level"
   method_option :status_page,             :type => :boolean, :desc => "Run the status page on 4567"
 
@@ -34,7 +35,8 @@ class Client < Thor
     def process_options(seed)
       TellaPeer::Message.port  = options[:port].to_i if options[:port]
       TellaPeer::Message.ttl   = options[:ttl].to_i  if options[:ttl]
-      TellaPeer::Message.ip    = open( 'http://jsonip.com/ ' ){ |s| JSON::parse( s.string())['ip'] }.split('.') unless options[:local]
+      TellaPeer::Message.local = options[:local] || false
+      TellaPeer::Message.find_public_ip(options[:public_ip])
       TellaPeer::Message.text  = options[:reply] || options[:port]
 
       seed_ip, seed_port = seed.split(':')

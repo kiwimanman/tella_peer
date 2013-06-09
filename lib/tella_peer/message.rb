@@ -3,7 +3,7 @@ require 'uuid'
 module TellaPeer
   class Message
     class << self
-      attr_writer :port, :ip, :ttl, :text
+      attr_writer :port, :ip, :ttl, :text, :local
       def ip
         @ip ||= [127, 0, 0, 1]
       end
@@ -18,6 +18,20 @@ module TellaPeer
       end
       def key
         "#{ip.join('.')}:#{port}"
+      end
+
+      def find_public_ip(public_ip = nil)
+        if public_ip
+          @local = true
+          self.ip = public_ip.split('.')
+        else
+          begin
+            Timeout::timeout(10) {
+              self.ip = open( 'http://jsonip.com/ ' ){ |s| JSON::parse( s.string())['ip'] }.split('.') unless @local
+            }
+          rescue
+          end
+        end
       end
     end
 
